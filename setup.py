@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 from sseclient.version import name, version
 
-with open('README.md') as readme:
+with open('README.rst') as readme:
     long_description = readme.read()
 
 setup(
