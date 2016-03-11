@@ -20,7 +20,7 @@ class SSEClient(object):
             event = {}
             for line in chunk.splitlines():
                 # Lines starting with a separator are to be ignored.
-                if line.startswith(_FIELD_SEPARATOR):
+                if not line.strip() or line.startswith(_FIELD_SEPARATOR):
                     continue
 
                 data = line.split(_FIELD_SEPARATOR, 1)
