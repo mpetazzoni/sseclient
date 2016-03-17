@@ -59,6 +59,10 @@ class SSEClient(object):
             # Dispatch the event
             yield Event(**event)
 
+    def close(self):
+        """Manually close the stream."""
+        self._stream.close()
+
 
 class Event(object):
     """Representation of an event from the event stream."""
