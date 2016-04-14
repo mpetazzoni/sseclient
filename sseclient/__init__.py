@@ -35,8 +35,23 @@ class SSEClient(object):
                       event_source)
         self._event_source = event_source
 
-    def events(self):
+    def _read(self):
+        """Read the incoming event source stream and yield event chunks.
+
+        Unfortunately it is possible for some servers to decide to break an
+        event into multiple HTTP chunks in the response. It is thus necessary
+        to correctly stitch together consecutive response chunks and find the
+        SSE delimiter (empty new line) to yield full, correct event chunks."""
+        data = ''
         for chunk in self._event_source.stream():
+            for line in chunk.splitlines(True):
+                if not line.strip():
+                    yield data
+                    data = ''
+                data += line
+
+    def events(self):
+        for chunk in self._read():
             event = Event()
             for line in chunk.splitlines():
                 # Lines starting with a separator are comments and are to be
