@@ -24,7 +24,7 @@ class SSEClient(object):
     specification.
     """
 
-    def __init__(self, event_source):
+    def __init__(self, event_source, char_enc='utf-8'):
         """Initialize the SSE client over an existing, ready to consume
         event source.
 
@@ -34,6 +34,7 @@ class SSEClient(object):
         logging.debug('Initialized SSE client from event source %s',
                       event_source)
         self._event_source = event_source
+        self._char_enc = char_enc
 
     def _read(self):
         """Read the incoming event source stream and yield event chunks.
@@ -48,7 +49,7 @@ class SSEClient(object):
                 if not line.strip():
                     yield data
                     data = ''
-                data += line
+                data += line.decode(self._char_enc)
 
     def events(self):
         for chunk in self._read():
