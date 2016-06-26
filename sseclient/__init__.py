@@ -43,7 +43,7 @@ class SSEClient(object):
         to correctly stitch together consecutive response chunks and find the
         SSE delimiter (empty new line) to yield full, correct event chunks."""
         data = ''
-        for chunk in self._event_source.stream():
+        for chunk in self._event_source:
             for line in chunk.splitlines(True):
                 if not line.strip():
                     yield data
