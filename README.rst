@@ -14,8 +14,9 @@ Usage
     import sseclient
 
     http = urllib3.PoolManager()
-    response = http.request('GET', 'http://domain.com/events')
-    client = sseclient.SSEClient(response.stream())
+    response = http.request('GET', 'http://domain.com/events',
+                            preload_content=False)
+    client = sseclient.SSEClient(response)
     for event in client.events():
         pprint.pprint(json.loads(event.data))
 
