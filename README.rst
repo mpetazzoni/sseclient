@@ -24,3 +24,4 @@ Resources
 =========
 
 -  http://www.w3.org/TR/2009/WD-eventsource-20091029/
+-  https://pypi.python.org/pypi/sseclient-py/
