@@ -4,6 +4,13 @@ Server Side Events (SSE) client for Python
 A Python client for SSE event sources that seamlessly integrates with
 ``urllib3`` and ``requests``.
 
+Installation
+------------
+
+.. code::
+
+    $ pip install sseclient-py
+
 Usage
 -----
 
