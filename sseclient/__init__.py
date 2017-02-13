@@ -50,6 +50,8 @@ class SSEClient(object):
                     yield data
                     data = ''
                 data += line.decode(self._char_enc)
+        if data:
+            yield data
 
     def events(self):
         for chunk in self._read():
