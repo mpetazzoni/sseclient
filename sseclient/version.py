@@ -1,2 +1,2 @@
 name = 'sseclient-py'
-version = '1.4'
+version = '1.5'
