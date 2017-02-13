@@ -78,7 +78,7 @@ class SSEClient(object):
                 # The data field may come over multiple lines and their values
                 # are concatenated with each other.
                 if field == 'data':
-                    event.__dict__[field] += value
+                    event.__dict__[field] += value + '\n'
                 else:
                     event.__dict__[field] = value
 
