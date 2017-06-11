@@ -43,20 +43,24 @@ class SSEClient(object):
         event into multiple HTTP chunks in the response. It is thus necessary
         to correctly stitch together consecutive response chunks and find the
         SSE delimiter (empty new line) to yield full, correct event chunks."""
-        data = ''
+        data = b''
         for chunk in self._event_source:
             for line in chunk.splitlines(True):
                 if not line.strip():
                     yield data
-                    data = ''
-                data += line.decode(self._char_enc)
+                    data = b''
+                data += line
         if data:
             yield data
 
     def events(self):
         for chunk in self._read():
             event = Event()
+            # Split before decoding so splitlines() only uses \r and \n
             for line in chunk.splitlines():
+                # Decode the line.
+                line = line.decode(self._char_enc)
+
                 # Lines starting with a separator are comments and are to be
                 # ignored.
                 if not line.strip() or line.startswith(_FIELD_SEPARATOR):
