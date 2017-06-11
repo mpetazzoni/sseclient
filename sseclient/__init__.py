@@ -4,14 +4,14 @@ Server Side Events (SSE) client for Python.
 Provides a generator of SSE received through an existing HTTP response.
 """
 
-# Copyright (C) 2016 SignalFx, Inc. All rights reserved.
+# Copyright (C) 2016-2017 SignalFx, Inc. All rights reserved.
 
 import logging
 
 
 __author__ = 'Maxime Petazzoni <maxime.petazzoni@bulix.org>'
 __email__ = 'maxime.petazzoni@bulix.org'
-__copyright__ = 'Copyright (C) 2016 SignalFx, Inc. All rights reserved.'
+__copyright__ = 'Copyright (C) 2016-2017 SignalFx, Inc. All rights reserved.'
 __all__ = ['SSEClient']
 
 _FIELD_SEPARATOR = ':'
@@ -28,8 +28,9 @@ class SSEClient(object):
         """Initialize the SSE client over an existing, ready to consume
         event source.
 
-        The event source is expected to provide a stream() generator method and
-        a close() method.
+        The event source is expected to be a binary stream and have a close()
+        method. That would usually be something that implements
+        io.BinaryIOBase, like an httplib or urllib3 HTTPResponse object.
         """
         logging.debug('Initialized SSE client from event source %s',
                       event_source)
