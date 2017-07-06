@@ -8,7 +8,6 @@ Provides a generator of SSE received through an existing HTTP response.
 
 import logging
 
-
 __author__ = 'Maxime Petazzoni <maxime.petazzoni@bulix.org>'
 __email__ = 'maxime.petazzoni@bulix.org'
 __copyright__ = 'Copyright (C) 2016-2017 SignalFx, Inc. All rights reserved.'
@@ -32,8 +31,9 @@ class SSEClient(object):
         method. That would usually be something that implements
         io.BinaryIOBase, like an httplib or urllib3 HTTPResponse object.
         """
-        logging.debug('Initialized SSE client from event source %s',
-                      event_source)
+        self._logger = logging.getLogger(self.__class__.__module__)
+        self._logger.debug('Initialized SSE client from event source %s',
+                           event_source)
         self._event_source = event_source
         self._char_enc = char_enc
 
@@ -72,8 +72,8 @@ class SSEClient(object):
 
                 # Ignore unknown fields.
                 if field not in event.__dict__:
-                    logging.debug('Saw invalid field %s while parsing '
-                                  'Server Side Event', field)
+                    self._logger.debug('Saw invalid field %s while parsing '
+                                       'Server Side Event', field)
                     continue
 
                 # Spaces may occur before the value; strip them. If no value is
@@ -96,7 +96,7 @@ class SSEClient(object):
                 event.data = event.data[0:-1]
 
             # Dispatch the event
-            logging.debug('Dispatching %s...', event)
+            self._logger.debug('Dispatching %s...', event)
             yield event
 
     def close(self):
