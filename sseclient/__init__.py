@@ -14,6 +14,7 @@ __copyright__ = 'Copyright (C) 2016-2017 SignalFx, Inc. All rights reserved.'
 __all__ = ['SSEClient']
 
 _FIELD_SEPARATOR = ':'
+_MAX_EVENT_DELIM_LEN = 4
 
 
 class SSEClient(object):
@@ -45,12 +46,16 @@ class SSEClient(object):
         to correctly stitch together consecutive response chunks and find the
         SSE delimiter (empty new line) to yield full, correct event chunks."""
         data = b''
+        cursor = 0
         for chunk in self._event_source:
-            for line in chunk.splitlines(True):
-                if not line.strip():
-                    yield data
-                    data = b''
-                data += line
+            data += chunk
+            delim = max(map(lambda s: (data.find(s, cursor), len(s)), ('\r\n\r\n', '\r\r', '\n\n')))
+            if delim[0] != -1:
+                yield data[:delim[0]]
+                data = data[delim[0] + delim[1]:]
+                cursor = 0
+            else:
+                cursor += len(chunk) - _MAX_EVENT_DELIM_LEN
         if data:
             yield data
 
