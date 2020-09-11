@@ -2,7 +2,7 @@
 # coding: utf-8
 
 """
-Unit tests for SSEClient. Tests were mosly copied from:
+Unit tests for SSEClient. Tests were mostly copied from:
 https://github.com/EventSource/eventsource/blob/master/test/eventsource_test.js
 """
 
