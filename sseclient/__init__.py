@@ -56,7 +56,6 @@ class SSEClient(object):
 
     def events(self):
         for chunk in self._read():
-            print('got chunk:', chunk)
             event = Event()
             # Split before decoding so splitlines() only uses \r and \n
             for line in chunk.splitlines():
