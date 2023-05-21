@@ -34,8 +34,7 @@ Usage
     def with_httpx(url, headers):
         import httpx
         with httpx.stream("GET", url, headers=headers) as s:
-            for chunk in s.iter_bytes():
-                yield chunk
+            yield from s.iter_bytes()
 
 
     url = 'http://domain.com/events'
