@@ -31,7 +31,7 @@ Usage
         import requests
         return requests.get(url, stream=True, headers=headers)
 
-    def stream(url, headers):
+    def with_httpx(url, headers):
         import httpx
         with httpx.stream("GET", url, headers=headers) as s:
             for chunk in s.iter_bytes():
