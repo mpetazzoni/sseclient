@@ -31,6 +31,13 @@ Usage
         import requests
         return requests.get(url, stream=True, headers=headers)
 
+    def stream(url, headers):
+        import httpx
+        with httpx.stream("GET", url, headers=headers) as s:
+            for chunk in s.iter_bytes():
+                yield chunk
+
+
     url = 'http://domain.com/events'
     headers = {'Accept': 'text/event-stream'}
     response = with_urllib3(url, headers)  # or with_requests(url, headers)
