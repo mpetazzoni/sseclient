@@ -19,6 +19,7 @@ setup(
     long_description=long_description,
     zip_safe=True,
     packages=find_packages(),
+    package_data={'sseclient': ['py.typed', '*.pyi']},
     classifiers=[
         'Operating System :: OS Independent',
         'Programming Language :: Python',
