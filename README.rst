@@ -32,8 +32,11 @@ Usage
         return requests.get(url, stream=True, headers=headers)
 
     def with_httpx(url, headers):
+        """Get a streaming response for the given event feed using httpx."""
         import httpx
-        with httpx.stream("GET", url, headers=headers) as s:
+        with httpx.stream('GET', url, headers=headers) as s:
+            # Note: 'yield from' is Python >= 3.3. Use for/yield instead if you
+            # are using an earlier version.
             yield from s.iter_bytes()
 
 
