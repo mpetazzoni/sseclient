@@ -20,7 +20,7 @@ class SSEClient(object):
     specification.
     """
 
-    def __init__(self, event_source, char_enc='utf-8'):
+    def __init__(self, event_source, char_enc='utf-8', ignore_comments=True):
         """Initialize the SSE client over an existing, ready to consume
         event source.
 
@@ -33,6 +33,7 @@ class SSEClient(object):
                            event_source)
         self._event_source = event_source
         self._char_enc = char_enc
+        self._ignore_comments = ignore_comments
 
     def _read(self):
         """Read the incoming event source stream and yield event chunks.
@@ -43,6 +44,12 @@ class SSEClient(object):
         SSE delimiter (empty new line) to yield full, correct event chunks."""
         data = b''
         for chunk in self._event_source:
+
+            # yield comments
+            if not self._ignore_comments and chunk.startswith(b':') and chunk.endswith(b'\n'):
+                yield chunk
+                continue
+
             for line in chunk.splitlines(True):
                 data += line
                 if data.endswith((b'\r\r', b'\n\n', b'\r\n\r\n')):
@@ -54,6 +61,16 @@ class SSEClient(object):
     def events(self):
         for chunk in self._read():
             event = Event()
+
+            if not self._ignore_comments and chunk.startswith(b':') and chunk.endswith(b'\n'):
+                event.event = 'comment'
+                event.data = chunk[1:-2].decode(self._char_enc)
+
+                # Dispatch the event
+                self._logger.debug('Dispatching %s...', event)
+                yield event
+                continue
+
             # Split before decoding so splitlines() only uses \r and \n
             for line in chunk.splitlines():
                 # Decode the line.

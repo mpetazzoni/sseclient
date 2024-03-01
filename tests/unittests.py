@@ -15,9 +15,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import sseclient  # noqa: E402
 
 
-def parse(content):
+def parse(content, ignore_comments=True):
     return [{'id': ev.id, 'event': ev.event, 'data': ev.data}
-            for ev in sseclient.SSEClient(content).events()]
+            for ev in sseclient.SSEClient(content, ignore_comments=ignore_comments).events()]
 
 
 class Parser(unittest.TestCase):
@@ -104,11 +104,26 @@ class Parser(unittest.TestCase):
                 [{'id': None, 'event': 'message', 'data': 'Hello'},
                  {'id': None, 'event': 'message', 'data': 'World'}])
 
+    def test_do_not_ignore_comments(self):
+        self.assertEqual(
+            parse([(b'data: Hello\n\n:nothing to see here\n\n'
+                    b'data: World\n\n')], ignore_comments=False),
+            [{'id': None, 'event': 'message', 'data': 'Hello'},
+             {'id': None, 'event': 'comment', 'data': 'nothing to see here'},
+             {'id': None, 'event': 'message', 'data': 'World'}])
+
     def test_ignores_empty_comments(self):
         self.assertEqual(
                 parse([b'data: Hello\n\n:\n\ndata: World\n\n']),
                 [{'id': None, 'event': 'message', 'data': 'Hello'},
                  {'id': None, 'event': 'message', 'data': 'World'}])
+
+    def test_do_not_ignore_empty_comments(self):
+        self.assertEqual(
+            parse([b'data: Hello\n\n:\n\ndata: World\n\n'], ignore_comments=False),
+            [{'id': None, 'event': 'message', 'data': 'Hello'},
+             {'id': None, 'event': 'comment', 'data': ''},
+             {'id': None, 'event': 'message', 'data': 'World'}])
 
     def test_does_not_ignore_multiline_strings(self):
         self.assertEqual(
