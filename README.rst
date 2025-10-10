@@ -24,12 +24,12 @@ Usage
         """Get a streaming response for the given event feed using urllib3."""
         import urllib3
         http = urllib3.PoolManager()
-        return http.request('GET', url, preload_content=False, headers=headers)
+        yield from sseclient.SSEClient(http.request('GET', url, preload_content=False, headers=headers).events()
 
     def with_requests(url, headers):
         """Get a streaming response for the given event feed using requests."""
         import requests
-        return requests.get(url, stream=True, headers=headers)
+        yield from sseclient.SSEClient(requests.get(url, stream=True, headers=headers)).events()
 
     def with_httpx(url, headers):
         """Get a streaming response for the given event feed using httpx."""
@@ -37,14 +37,12 @@ Usage
         with httpx.stream('GET', url, headers=headers) as s:
             # Note: 'yield from' is Python >= 3.3. Use for/yield instead if you
             # are using an earlier version.
-            yield from s.iter_bytes()
+            yield from sseclient.SSEClient(s.iter_bytes()).events()
 
 
     url = 'http://domain.com/events'
     headers = {'Accept': 'text/event-stream'}
-    response = with_urllib3(url, headers)  # or with_requests(url, headers)
-    client = sseclient.SSEClient(response)
-    for event in client.events():
+    for event in with_urllib3(url, headers): # or with_requests(url, headers)
         pprint.pprint(json.loads(event.data))
 
 Resources
