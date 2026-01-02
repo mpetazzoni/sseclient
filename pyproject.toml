@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sseclient-py"
+dynamic = ["version"]
+description = "SSE client for Python"
+requires-python = ">=3.7"
+readme = "README.rst"
+authors = [
+  { name = "Maxime Petazzoni", email = "maxime.petazzoni@bulix.org" },
+]
+license = { text = "Apache Software License v2" }
+classifiers = [
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+]
+dependencies = []
+
+[tool.hatch.version]
+path = "sseclient/version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["sseclient"]
+
+[dependency-groups]
+dev = [
+    "pre-commit",
+    "pytest",
+    "ruff",
+]
