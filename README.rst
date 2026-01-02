@@ -16,36 +16,37 @@ Usage
 
 .. code:: python
 
-    import json
-    import pprint
     import sseclient
 
-    def with_urllib3(url, headers):
+    def with_urllib3(url):
         """Get a streaming response for the given event feed using urllib3."""
         import urllib3
         http = urllib3.PoolManager()
-        return http.request('GET', url, preload_content=False, headers=headers)
+        res = http.request('GET', url, preload_content=False)
+        yield from sseclient.SSEClient(res).events()
 
-    def with_requests(url, headers):
+    def with_requests(url):
         """Get a streaming response for the given event feed using requests."""
         import requests
-        return requests.get(url, stream=True, headers=headers)
+        res = requests.get(url, stream=True)
+        yield from sseclient.SSEClient(res).events()
 
-    def with_httpx(url, headers):
+    def with_httpx(url):
         """Get a streaming response for the given event feed using httpx."""
         import httpx
-        with httpx.stream('GET', url, headers=headers) as s:
+        with httpx.stream('GET', url) as s:
             # Note: 'yield from' is Python >= 3.3. Use for/yield instead if you
             # are using an earlier version.
-            yield from s.iter_bytes()
+            yield from sseclient.SSEClient(s.iter_bytes()).events()
 
 
     url = 'http://domain.com/events'
-    headers = {'Accept': 'text/event-stream'}
-    response = with_urllib3(url, headers)  # or with_requests(url, headers)
-    client = sseclient.SSEClient(response)
-    for event in client.events():
-        pprint.pprint(json.loads(event.data))
+    for event in with_urllib3(url):
+        ...
+    for event in with_requests(url):
+        ...
+    for event in with_httpx(url):
+        ...
 
 Resources
 =========
