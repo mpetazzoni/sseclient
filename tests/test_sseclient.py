@@ -111,6 +111,55 @@ class Parser(unittest.TestCase):
             ],
         )
 
+    def test_mixed_line_endings_across_chunk_boundaries(self):
+        endings = (b"\r", b"\n", b"\r\n")
+        expected = [
+            {"id": "1", "event": "greeting", "data": "first"},
+            {"id": "2", "event": "message", "data": "second"},
+        ]
+        for first in endings:
+            for second in endings:
+                if first + second == b"\r\n":
+                    continue
+                content = (
+                    b"id: 1\nevent: greeting\ndata: first"
+                    + first
+                    + second
+                    + b"id: 2\ndata: second\n\n"
+                )
+                for boundary in range(len(content) + 1):
+                    with self.subTest(first=first, second=second, boundary=boundary):
+                        self.assertEqual(
+                            parse([content[:boundary], content[boundary:]]), expected
+                        )
+                with self.subTest(first=first, second=second, chunking="bytes"):
+                    self.assertEqual(
+                        parse([content[i : i + 1] for i in range(len(content))]),
+                        expected,
+                    )
+
+    def test_split_CRLF_with_empty_chunks_is_one_line_ending(self):
+        self.assertEqual(
+            parse([b"data: first\r", b"", b"\n", b"", b"data: second\n\n"]),
+            [{"id": None, "event": "message", "data": "first\nsecond"}],
+        )
+
+    def test_mixed_line_endings_dispatch_before_next_chunk(self):
+        def source():
+            yield b"data: first\r\n\r"
+            self.fail("The next chunk was read before dispatching the event")
+
+        self.assertEqual(next(sseclient.SSEClient(source()).events()).data, "first")
+
+    def test_final_partial_event_with_mixed_line_endings(self):
+        self.assertEqual(
+            parse([b"data: first\r\n\r", b"\ndata: second"]),
+            [
+                {"id": None, "event": "message", "data": "first"},
+                {"id": None, "event": "message", "data": "second"},
+            ],
+        )
+
     def test_delivers_message_with_explicit_event(self):
         self.assertEqual(
             parse([b"event: greeting\ndata: Hello\n\n"]),
