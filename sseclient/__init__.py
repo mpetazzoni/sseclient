@@ -51,12 +51,17 @@ class SSEClient(object):
             yield data
 
     def events(self):
+        first_line = True
         for chunk in self._read():
             event = Event()
             # Split before decoding so splitlines() only uses \r and \n
             for line in chunk.splitlines():
                 # Decode the line.
                 line = line.decode(self._char_enc)
+                if first_line:
+                    if line.startswith("\ufeff"):
+                        line = line[1:]
+                    first_line = False
 
                 # Lines starting with a separator are comments and are to be
                 # ignored.
