@@ -321,6 +321,31 @@ class Parser(unittest.TestCase):
         self.assertEqual(chunks, [b"data: partial"])
         self.assertIs(type(chunks[0]), bytes)
 
+    def test_large_multiline_event(self):
+        lines = [" €豆腐 " * 32] * 8192
+        stream = (
+            "id: large\nevent: update\nretry: 1000\n"
+            + "".join("data: " + line + "\n" for line in lines)
+            + "\ndata: next\n\n"
+        ).encode()
+        chunks = (stream[i : i + 128] for i in range(0, len(stream), 128))
+        events = list(sseclient.SSEClient(chunks).events())
+        self.assertEqual(len(events), 2)
+        self.assertEqual(events[0].data, "\n".join(lines))
+        self.assertEqual(events[0].id, "large")
+        self.assertEqual(events[0].event, "update")
+        self.assertEqual(events[0].retry, "1000")
+        self.assertEqual(events[1].data, "next")
+
+    def test_empty_data_field_still_dispatches(self):
+        self.assertEqual(
+            parse([b"id: ignored\n\ndata:\n\ndata:\ndata:\n\n"]),
+            [
+                {"id": None, "event": "message", "data": ""},
+                {"id": None, "event": "message", "data": "\n"},
+            ],
+        )
+
     def test_ID(self):
         self.assertEqual(
             parse([b"id: 90\ndata: Hello\n\n"]),

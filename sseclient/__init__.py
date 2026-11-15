@@ -65,6 +65,7 @@ class SSEClient:
         first_line = True
         for chunk in self._read():
             event = Event()
+            data_lines = []
             # Split before decoding so splitlines() only uses \r and \n
             for line in chunk.splitlines():
                 # Decode the line.
@@ -104,17 +105,15 @@ class SSEClient:
                 # The data field may come over multiple lines and their values
                 # are concatenated with each other.
                 if field == "data":
-                    event.__dict__[field] += value + "\n"
+                    data_lines.append(value)
                 else:
                     event.__dict__[field] = value
 
             # Events with no data are not dispatched.
-            if not event.data:
+            if not data_lines:
                 continue
 
-            # If the data field ends with a newline, remove it.
-            if event.data.endswith("\n"):
-                event.data = event.data[0:-1]
+            event.data = "\n".join(data_lines)
 
             # Empty event names default to 'message'
             event.event = event.event or "message"
