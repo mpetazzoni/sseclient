@@ -23,6 +23,39 @@ def parse(content):
 
 
 class Parser(unittest.TestCase):
+    def test_ignores_initial_bom(self):
+        content = "\ufeffdata: Hello\n\n".encode("utf-8")
+        for chunks in ([content], [content[:1], content[1:2], content[2:]]):
+            with self.subTest(chunks=chunks):
+                self.assertEqual(
+                    parse(chunks),
+                    [{"id": None, "event": "message", "data": "Hello"}],
+                )
+
+    def test_initial_bom_before_id(self):
+        self.assertEqual(
+            parse(["\ufeffid: 1\ndata: Hello\n\n".encode("utf-8")]),
+            [{"id": "1", "event": "message", "data": "Hello"}],
+        )
+
+    def test_preserves_bom_in_later_event_data(self):
+        self.assertEqual(
+            parse(["data: first\n\ndata: \ufeffsecond\n\n".encode("utf-8")]),
+            [
+                {"id": None, "event": "message", "data": "first"},
+                {"id": None, "event": "message", "data": "\ufeffsecond"},
+            ],
+        )
+
+    def test_only_one_initial_bom_is_ignored(self):
+        self.assertEqual(
+            parse(["\ufeff\ufeffdata: ignored\ndata: Hello\n\n".encode("utf-8")]),
+            [{"id": None, "event": "message", "data": "Hello"}],
+        )
+
+    def test_bom_after_initial_newline_is_not_ignored(self):
+        self.assertEqual(parse(["\n\ufeffdata: ignored\n\n".encode("utf-8")]), [])
+
     def test_multibyte_characters(self):
         self.assertEqual(
             parse(["id: 1\ndata: €豆腐\n\n".encode("utf-8")]),
