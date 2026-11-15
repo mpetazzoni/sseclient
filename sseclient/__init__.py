@@ -13,7 +13,7 @@ __all__ = ["SSEClient"]
 _FIELD_SEPARATOR = ":"
 
 
-class SSEClient(object):
+class SSEClient:
     """Implementation of a SSE client.
 
     See http://www.w3.org/TR/2009/WD-eventsource-20091029/ for the
@@ -70,8 +70,7 @@ class SSEClient(object):
                 # Decode the line.
                 line = line.decode(self._char_enc)
                 if first_line:
-                    if line.startswith("\ufeff"):
-                        line = line[1:]
+                    line = line.removeprefix("\ufeff")
                     first_line = False
 
                 # Lines starting with a separator are comments and are to be
@@ -85,7 +84,7 @@ class SSEClient(object):
                 # Ignore unknown fields.
                 if field not in event.__dict__:
                     self._logger.debug(
-                        "Saw invalid field %s while parsing " "Server Side Event", field
+                        "Saw invalid field %s while parsing Server Side Event", field
                     )
                     continue
 
@@ -129,7 +128,7 @@ class SSEClient(object):
         self._event_source.close()
 
 
-class Event(object):
+class Event:
     """Representation of an event from the event stream."""
 
     def __init__(self, id=None, event="message", data="", retry=None):
@@ -139,13 +138,13 @@ class Event(object):
         self.retry = retry
 
     def __str__(self):
-        s = "{0} event".format(self.event)
+        s = f"{self.event} event"
         if self.id:
-            s += " #{0}".format(self.id)
+            s += f" #{self.id}"
         if self.data:
-            s += ", {0} byte{1}".format(len(self.data), "s" if len(self.data) else "")
+            s += ", {} byte{}".format(len(self.data), "s" if len(self.data) else "")
         else:
             s += ", no data"
         if self.retry:
-            s += ", retry in {0}ms".format(self.retry)
+            s += f", retry in {self.retry}ms"
         return s

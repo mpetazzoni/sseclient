@@ -5,19 +5,34 @@ build-backend = "hatchling.build"
 [project]
 name = "sseclient-py"
 dynamic = ["version"]
-description = "SSE client for Python"
-requires-python = ">=3.7"
+description = "Server-Sent Events client for Python"
+requires-python = ">=3.11"
 readme = "README.rst"
 authors = [
   { name = "Maxime Petazzoni", email = "maxime.petazzoni@bulix.org" },
 ]
-license = { text = "Apache Software License v2" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+keywords = ["sse", "server-sent-events", "eventsource"]
 classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
   "Operating System :: OS Independent",
-  "Programming Language :: Python",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
+  "Topic :: Internet :: WWW/HTTP",
 ]
 dependencies = []
+
+[project.urls]
+Repository = "https://github.com/mpetazzoni/sseclient"
+Issues = "https://github.com/mpetazzoni/sseclient/issues"
+PyPI = "https://pypi.org/project/sseclient-py/"
 
 [tool.hatch.version]
 path = "sseclient/version.py"
@@ -27,7 +42,15 @@ packages = ["sseclient"]
 
 [dependency-groups]
 dev = [
+    "mypy",
     "pre-commit",
     "pytest",
     "ruff",
+    "twine",
 ]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.uv]
+required-version = ">=0.13.5,<0.14"

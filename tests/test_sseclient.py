@@ -1,18 +1,15 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 """
 Unit tests for SSEClient. Tests were mostly copied from:
 https://github.com/EventSource/eventsource/blob/master/test/eventsource_test.js
 """
 
 import os
-import sys
 import struct
+import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import sseclient  # noqa: E402
+import sseclient
 
 
 def parse(content):
@@ -58,13 +55,13 @@ class Parser(unittest.TestCase):
 
     def test_multibyte_characters(self):
         self.assertEqual(
-            parse(["id: 1\ndata: €豆腐\n\n".encode("utf-8")]),
+            parse(["id: 1\ndata: €豆腐\n\n".encode()]),
             [{"id": "1", "event": "message", "data": "€豆腐"}],
         )
 
     def test_parses_empty_lines_with_multibyte_characters(self):
         self.assertEqual(
-            parse(["\n\n\n\nid: 1\ndata: 我現在都看實況不玩遊戲\n\n".encode("utf-8")]),
+            parse(["\n\n\n\nid: 1\ndata: 我現在都看實況不玩遊戲\n\n".encode()]),
             [{"id": "1", "event": "message", "data": "我現在都看實況不玩遊戲"}],
         )
 
@@ -101,9 +98,7 @@ class Parser(unittest.TestCase):
             parse(
                 [
                     struct.pack("B", b)
-                    for b in bytearray(
-                        "data: Aslak\n\ndata: Hellesøy\n\n".encode("utf-8")
-                    )
+                    for b in bytearray("data: Aslak\n\ndata: Hellesøy\n\n".encode())
                 ]
             ),
             [
@@ -118,7 +113,7 @@ class Parser(unittest.TestCase):
                 [
                     struct.pack("B", b)
                     for b in bytearray(
-                        "data: Aslak\r\n\r\ndata: Hellesøy\r\n\r\n".encode("utf-8")
+                        "data: Aslak\r\n\r\ndata: Hellesøy\r\n\r\n".encode()
                     )
                 ]
             ),
@@ -133,9 +128,7 @@ class Parser(unittest.TestCase):
             parse(
                 [
                     struct.pack("B", b)
-                    for b in bytearray(
-                        "data: Aslak\r\rdata: Hellesøy\r\r".encode("utf-8")
-                    )
+                    for b in bytearray("data: Aslak\r\rdata: Hellesøy\r\r".encode())
                 ]
             ),
             [
@@ -229,7 +222,7 @@ class Parser(unittest.TestCase):
 
     def test_ignores_comments(self):
         self.assertEqual(
-            parse([(b"data: Hello\n\n:nothing to see here\n\n" b"data: World\n\n")]),
+            parse([(b"data: Hello\n\n:nothing to see here\n\ndata: World\n\n")]),
             [
                 {"id": None, "event": "message", "data": "Hello"},
                 {"id": None, "event": "message", "data": "World"},
