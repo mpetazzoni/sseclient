@@ -271,6 +271,81 @@ class Parser(unittest.TestCase):
             [{"id": None, "event": "message", "data": "a" * 10000}],
         )
 
+    def test_large_fragmented_events(self):
+        payload = "A" * (2 * 1024 * 1024)
+        for ending in (b"\n", b"\r", b"\r\n"):
+            stream = (
+                b"id: large"
+                + ending
+                + b"data: "
+                + payload.encode()
+                + ending * 2
+                + b"data: next"
+                + ending * 2
+            )
+            for chunk_size in (128, 4096, 65536):
+                with self.subTest(ending=ending, chunk_size=chunk_size):
+                    chunks = (
+                        stream[i : i + chunk_size]
+                        for i in range(0, len(stream), chunk_size)
+                    )
+                    self.assertEqual(
+                        parse(chunks),
+                        [
+                            {"id": "large", "event": "message", "data": payload},
+                            {"id": None, "event": "message", "data": "next"},
+                        ],
+                    )
+
+    def test_read_yields_independent_bytes(self):
+        reader = sseclient.SSEClient([b"data: first\n\ndata: second\n\n"])._read()
+        first = next(reader)
+        second = next(reader)
+        self.assertIs(type(first), bytes)
+        self.assertIs(type(second), bytes)
+        self.assertEqual(first, b"data: first\n\n")
+        self.assertEqual(second, b"data: second\n\n")
+        self.assertEqual(list(reader), [])
+        self.assertEqual(first, b"data: first\n\n")
+
+    def test_large_fragmented_partial_event_at_eof(self):
+        payload = "A" * (2 * 1024 * 1024)
+        stream = b"data: " + payload.encode()
+        chunks = (stream[i : i + 128] for i in range(0, len(stream), 128))
+        self.assertEqual(
+            parse(chunks), [{"id": None, "event": "message", "data": payload}]
+        )
+
+    def test_read_partial_event_yields_bytes(self):
+        chunks = list(sseclient.SSEClient([b"data: par", b"tial"])._read())
+        self.assertEqual(chunks, [b"data: partial"])
+        self.assertIs(type(chunks[0]), bytes)
+
+    def test_large_multiline_event(self):
+        lines = [" €豆腐 " * 32] * 8192
+        stream = (
+            "id: large\nevent: update\nretry: 1000\n"
+            + "".join("data: " + line + "\n" for line in lines)
+            + "\ndata: next\n\n"
+        ).encode()
+        chunks = (stream[i : i + 128] for i in range(0, len(stream), 128))
+        events = list(sseclient.SSEClient(chunks).events())
+        self.assertEqual(len(events), 2)
+        self.assertEqual(events[0].data, "\n".join(lines))
+        self.assertEqual(events[0].id, "large")
+        self.assertEqual(events[0].event, "update")
+        self.assertEqual(events[0].retry, "1000")
+        self.assertEqual(events[1].data, "next")
+
+    def test_empty_data_field_still_dispatches(self):
+        self.assertEqual(
+            parse([b"id: ignored\n\ndata:\n\ndata:\ndata:\n\n"]),
+            [
+                {"id": None, "event": "message", "data": ""},
+                {"id": None, "event": "message", "data": "\n"},
+            ],
+        )
+
     def test_ID(self):
         self.assertEqual(
             parse([b"id: 90\ndata: Hello\n\n"]),

@@ -45,9 +45,13 @@ dev = [
     "mypy",
     "pre-commit",
     "pytest",
+    "pytest-benchmark",
     "ruff",
     "twine",
 ]
+
+[tool.pytest.ini_options]
+addopts = "--benchmark-disable"
 
 [tool.ruff]
 target-version = "py311"
