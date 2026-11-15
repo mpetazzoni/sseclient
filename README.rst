@@ -1,13 +1,14 @@
-Server Side Events (SSE) client for Python
-==========================================
+Server-Sent Events client for Python
+====================================
 
-A Python client for SSE event sources that seamlessly integrates with
-``urllib3`` and ``requests``.
+``sseclient-py`` turns a streaming HTTP response into Server-Sent Events (SSE).
+It works with ``requests``, ``urllib3`` and ``httpx``, and has no dependencies.
+Python 3.10 or newer is required.
 
 Installation
 ------------
 
-.. code::
+.. code:: console
 
     $ pip install sseclient-py
 
@@ -16,40 +17,58 @@ Usage
 
 .. code:: python
 
+    import requests
     import sseclient
 
-    def with_urllib3(url):
-        """Get a streaming response for the given event feed using urllib3."""
-        import urllib3
-        http = urllib3.PoolManager()
-        res = http.request('GET', url, preload_content=False)
-        yield from sseclient.SSEClient(res).events()
+    url = "https://example.com/events"
+    with requests.get(
+        url,
+        headers={"Accept": "text/event-stream"},
+        stream=True,
+        timeout=(3.05, 60),
+    ) as response:
+        response.raise_for_status()
+        for event in sseclient.SSEClient(response).events():
+            print(event.id, event.event, event.data)
 
-    def with_requests(url):
-        """Get a streaming response for the given event feed using requests."""
-        import requests
-        res = requests.get(url, stream=True)
-        yield from sseclient.SSEClient(res).events()
+The timeout is a connect/read timeout, not a limit on the whole stream. Adjust
+the read timeout to allow for your server's keep-alive interval.
 
-    def with_httpx(url):
-        """Get a streaming response for the given event feed using httpx."""
-        import httpx
-        with httpx.stream('GET', url) as s:
-            # Note: 'yield from' is Python >= 3.3. Use for/yield instead if you
-            # are using an earlier version.
-            yield from sseclient.SSEClient(s.iter_bytes()).events()
+Other HTTP clients
+------------------
 
+Pass the client's byte stream to ``SSEClient``:
 
-    url = 'http://domain.com/events'
-    for event in with_urllib3(url):
-        ...
-    for event in with_requests(url):
-        ...
-    for event in with_httpx(url):
-        ...
+.. code:: python
+
+    import httpx
+    import urllib3
+
+    # urllib3
+    http = urllib3.PoolManager()
+    response = http.request("GET", url, preload_content=False)
+    client = sseclient.SSEClient(response.stream())
+
+    # httpx
+    with httpx.stream("GET", url) as response:
+        client = sseclient.SSEClient(response.iter_bytes())
+        for event in client.events():
+            print(event.data)
+
+Reconnecting
+------------
+
+Connections and retries belong to the HTTP client. When ``events()`` returns,
+connect again. To resume without repeating events, remember the last non-empty
+``event.id`` and send it in the ``Last-Event-ID`` header on the new request.
+Use a delay or backoff between attempts.
+
+The yielded events have ``id``, ``event``, ``data`` and ``retry`` attributes.
+Comments and events without data are ignored.
 
 Resources
-=========
+---------
 
--  http://www.w3.org/TR/2009/WD-eventsource-20091029/
--  https://pypi.python.org/pypi/sseclient-py/
+- `SSE specification <https://html.spec.whatwg.org/multipage/server-sent-events.html>`_
+- `PyPI <https://pypi.org/project/sseclient-py/>`_
+- `Source and issues <https://github.com/mpetazzoni/sseclient>`_
