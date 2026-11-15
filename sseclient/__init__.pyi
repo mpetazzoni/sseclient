@@ -4,7 +4,8 @@ Server Side Events (SSE) client for Python.
 Provides a generator of SSE received through an existing HTTP response.
 """
 
-from typing import Any, Generator, Optional, Iterator
+from collections.abc import Generator, Iterator
+from typing import Any
 
 __all__ = ["SSEClient"]
 
@@ -12,15 +13,13 @@ class SSEClient:
     """SSE client interface."""
 
     def __init__(self, event_source: Iterator[bytes], char_enc: str = "utf-8"): ...
-    def events(self) -> Generator[Event, None, None]: ...
+    def events(self) -> Generator[Event]: ...
     def close(self) -> None: ...
 
 class Event:
     """Representation of an event from the event stream."""
 
-    id: Optional[str]
+    id: str | None
     event: str
     data: str
-    retry: Optional[Any]
-
-    def __str__(self) -> str: ...
+    retry: Any | None
