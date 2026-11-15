@@ -40,7 +40,7 @@ class SSEClient:
         event into multiple HTTP chunks in the response. It is thus necessary
         to correctly stitch together consecutive response chunks and find the
         SSE delimiter (empty new line) to yield full, correct event chunks."""
-        data = b""
+        data = bytearray()
         pending_cr = False
         for chunk in self._event_source:
             for line in chunk.splitlines(True):
@@ -54,12 +54,12 @@ class SSEClient:
                 elif line.endswith(b"\r"):
                     line = line[:-1] + b"\n"
                     pending_cr = True
-                data += line
+                data.extend(line)
                 if data.endswith(b"\n\n"):
-                    yield data
-                    data = b""
+                    yield bytes(data)
+                    data.clear()
         if data:
-            yield data
+            yield bytes(data)
 
     def events(self):
         first_line = True
