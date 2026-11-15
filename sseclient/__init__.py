@@ -41,10 +41,21 @@ class SSEClient(object):
         to correctly stitch together consecutive response chunks and find the
         SSE delimiter (empty new line) to yield full, correct event chunks."""
         data = b""
+        pending_cr = False
         for chunk in self._event_source:
             for line in chunk.splitlines(True):
+                # A CRLF split between chunks is still a single line ending.
+                if pending_cr:
+                    pending_cr = False
+                    if line == b"\n":
+                        continue
+                if line.endswith(b"\r\n"):
+                    line = line[:-2] + b"\n"
+                elif line.endswith(b"\r"):
+                    line = line[:-1] + b"\n"
+                    pending_cr = True
                 data += line
-                if data.endswith((b"\r\r", b"\n\n", b"\r\n\r\n")):
+                if data.endswith(b"\n\n"):
                     yield data
                     data = b""
         if data:
