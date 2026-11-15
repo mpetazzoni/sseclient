@@ -58,10 +58,14 @@ Pass the client's byte stream to ``SSEClient``:
 Reconnecting
 ------------
 
-Connections and retries belong to the HTTP client. When ``events()`` returns,
-connect again. To resume without repeating events, remember the last non-empty
-``event.id`` and send it in the ``Last-Event-ID`` header on the new request.
-Use a delay or backoff between attempts.
+Manage connections and retries in your application. Reconnect when ``events()``
+ends or the HTTP client raises a connection or read-timeout error. Use a delay
+or backoff between attempts.
+
+Resuming depends on the server. When ``event.id is not None``, remember that ID,
+including an empty string (which clears it). Send a non-empty remembered ID in
+the next request's ``Last-Event-ID`` header. ID-only updates are not exposed by
+this parser; duplicate-free delivery is not guaranteed.
 
 The yielded events have ``id``, ``event``, ``data`` and ``retry`` attributes.
 Comments and events without data are ignored.
