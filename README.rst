@@ -3,7 +3,7 @@ Server-Sent Events client for Python
 
 ``sseclient-py`` turns a streaming HTTP response into Server-Sent Events (SSE).
 It works with ``requests``, ``urllib3`` and ``httpx``, and has no dependencies.
-Python 3.10 or newer is required.
+Python 3.11 or newer is required.
 
 Installation
 ------------
