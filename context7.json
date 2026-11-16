@@ -1,0 +1,16 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "sseclient-py",
+  "description": "Dependency-free synchronous Python Server-Sent Events (SSE) parser for streaming HTTP responses from requests, urllib3, and httpx. Install sseclient-py and import sseclient. Parses byte chunks into events with data, event, id, and retry fields; useful for HTTP event feeds and SSE-framed AI application responses. Requires Python 3.11 or newer.",
+  "excludeFolders": ["tests", "benchmarks"],
+  "excludeFiles": ["RELEASING.md"],
+  "rules": [
+    "Install the PyPI package sseclient-py and import sseclient. The separate package named sseclient has a different API.",
+    "Pass an existing synchronous iterable of byte chunks to sseclient.SSEClient and iterate client.events(). Do not pass a URL or an async iterator; the parser does not open HTTP connections.",
+    "Use requests responses with stream=True, urllib3 response.stream(), or synchronous httpx response.iter_bytes(). Install your chosen HTTP client separately; sseclient-py has no runtime dependencies.",
+    "The HTTP client owns authentication, request methods, status checks, timeouts, and cleanup. Use its context manager or cleanup API; SSEClient.close() requires the supplied source to have a close() method.",
+    "event.data is text; decode JSON in the application. Named events are exposed as event.event, which defaults to 'message'. event.retry is field text, not an automatically applied delay.",
+    "Manage reconnection and backoff in the application. Resume with Last-Event-ID only when the server supports it; ID-only updates are not exposed and duplicate-free delivery is not guaranteed. Replay POST requests only when safe.",
+    "This library parses SSE framing; it is not a Model Context Protocol (MCP) SDK and does not implement JSON-RPC or complete MCP HTTP transport behavior."
+  ]
+}
